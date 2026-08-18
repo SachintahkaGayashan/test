@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Robot Control Panel & Serial Monitor</title>
+    <title>Robot Control & Real-Time Console</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -23,7 +23,7 @@
             border-radius: 15px;
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
             text-align: center;
-            width: 350px;
+            width: 360px;
             margin-bottom: 20px;
         }
         h2, h3 { margin-bottom: 15px; }
@@ -31,13 +31,13 @@
         .btn-on { background-color: #00b894; color: white; }
         .btn-off { background-color: #d63031; color: white; }
         
-        /* Serial Monitor Terminal Box */
+        /* Terminal Console Box */
         .console-card {
             background-color: #0f172a;
             border: 1px solid #1e293b;
             padding: 20px;
             border-radius: 12px;
-            width: 350px;
+            width: 360px;
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
         }
         #serialConsole {
@@ -46,7 +46,7 @@
             font-family: 'Courier New', Courier, monospace;
             padding: 12px;
             border-radius: 8px;
-            height: 200px;
+            height: 220px;
             overflow-y: auto;
             text-align: left;
             font-size: 13px;
@@ -89,12 +89,10 @@
                 lastMsg = data;
                 const consoleBox = document.getElementById('serialConsole');
                 
-                // Clear placeholder text if it's the first log
                 if (consoleBox.innerText === "Waiting for live stream...") {
                     consoleBox.innerText = "";
                 }
 
-                // Add timestamp and append new log line
                 const time = new Date().toLocaleTimeString();
                 consoleBox.innerText += `[${time}] ${data}\n`;
                 
@@ -105,7 +103,7 @@
         .catch(err => console.error(err));
     }
 
-    // Fetch data every 500ms
+    // Poll data every 500 milliseconds
     setInterval(fetchSerialData, 500);
 </script>
 
