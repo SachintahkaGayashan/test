@@ -21,30 +21,70 @@
             border-radius: 15px;
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
             text-align: center;
-            width: 300px;
+            width: 320px;
         }
         h2 { margin-bottom: 25px; }
+        .input-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #a29bfe;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #0f3460;
+            background-color: #0f3460;
+            color: #fff;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
         .btn {
-            padding: 15px 30px;
-            font-size: 18px;
+            padding: 12px 20px;
+            font-size: 16px;
             font-weight: bold;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            margin: 10px;
+            margin: 10px 0;
             transition: 0.3s;
-            width: 80%;
+            width: 100%;
         }
+        .btn-login { background-color: #0984e3; color: white; }
+        .btn-login:hover { background-color: #74b9ff; }
         .btn-on { background-color: #00b894; color: white; }
         .btn-on:hover { background-color: #55efc4; }
         .btn-off { background-color: #d63031; color: white; }
         .btn-off:hover { background-color: #ff7675; }
         #statusText { margin-top: 20px; font-size: 16px; color: #a29bfe; }
+        #loginError { color: #ff7675; font-size: 14px; margin-top: 10px; display: none; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-<div class="card">
+<!-- 1. Login Form Card -->
+<div class="card" id="loginCard">
+    <h2>Smart Home Login</h2>
+    <div class="input-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" placeholder="Enter username">
+    </div>
+    <div class="input-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Enter password">
+    </div>
+    <button class="btn btn-login" onclick="login()">LOGIN</button>
+    <div id="loginError">Invalid Username or Password!</div>
+</div>
+
+<!-- 2. Control Panel Card (Initially Hidden) -->
+<div class="card hidden" id="controlCard">
     <h2>Device Control</h2>
     <button class="btn btn-on" onclick="sendData('ON')">TURN ON</button>
     <button class="btn btn-off" onclick="sendData('OFF')">TURN OFF</button>
@@ -52,8 +92,26 @@
 </div>
 
 <script>
-    // Replace with your Firebase Database URL (e.g., https://myesp8266app-default-rtdb.firebaseio.com)
+    // Firebase Database URL
     const databaseURL = "https://test-5b6ed-default-rtdb.firebaseio.com/";
+
+    // Authentication Credentials
+    const validUsername = "sachinthaka";
+    const validPassword = "sachinthaka";
+
+    function login() {
+        const userIn = document.getElementById('username').value;
+        const passIn = document.getElementById('password').value;
+        const errorMsg = document.getElementById('loginError');
+
+        if (userIn === validUsername && passIn === validPassword) {
+            document.getElementById('loginCard').classList.add('hidden');
+            document.getElementById('controlCard').classList.remove('hidden');
+            errorMsg.style.display = "none";
+        } else {
+            errorMsg.style.display = "block";
+        }
+    }
 
     function sendData(status) {
         document.getElementById('statusText').innerText = "Sending command...";
