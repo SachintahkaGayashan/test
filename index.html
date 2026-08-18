@@ -27,17 +27,11 @@
             margin-bottom: 20px;
         }
         h2, h3 { margin-bottom: 15px; }
-        .input-group { margin-bottom: 15px; text-align: left; }
-        .input-group label { display: block; margin-bottom: 5px; font-size: 14px; color: #a29bfe; }
-        .input-group input { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #0f3460; background-color: #0f3460; color: #fff; box-sizing: border-box; }
         .btn { padding: 12px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 8px 0; transition: 0.3s; width: 100%; }
-        .btn-login { background-color: #0984e3; color: white; }
         .btn-on { background-color: #00b894; color: white; }
         .btn-off { background-color: #d63031; color: white; }
-        #loginError { color: #ff7675; font-size: 14px; display: none; margin-top: 5px; }
-        .hidden { display: none; }
         
-        /* Serial Monitor Console Styling */
+        /* Serial Monitor Terminal Box */
         .console-card {
             background-color: #0f172a;
             border: 1px solid #1e293b;
@@ -52,62 +46,32 @@
             font-family: 'Courier New', Courier, monospace;
             padding: 12px;
             border-radius: 8px;
-            height: 150px;
+            height: 200px;
             overflow-y: auto;
             text-align: left;
-            font-size: 14px;
+            font-size: 13px;
             border: 1px solid #1e293b;
             white-space: pre-wrap;
+            line-height: 1.4;
         }
     </style>
 </head>
 <body>
 
-<!-- Login Card -->
-<div class="card" id="loginCard">
-    <h2>Robot Portal Login</h2>
-    <div class="input-group">
-        <label>Username</label>
-        <input type="text" id="username" placeholder="Enter username">
-    </div>
-    <div class="input-group">
-        <label>Password</label>
-        <input type="password" id="password" placeholder="Enter password">
-    </div>
-    <button class="btn btn-login" onclick="login()">LOGIN</button>
-    <div id="loginError">Invalid Credentials!</div>
-</div>
-
-<!-- Main Control & Monitor Panel -->
-<div class="card hidden" id="controlCard">
+<div class="card">
     <h2>Robot Control</h2>
     <button class="btn btn-on" onclick="sendData('ON')">TURN ON</button>
     <button class="btn btn-off" onclick="sendData('OFF')">TURN OFF</button>
 </div>
 
-<div class="console-card hidden" id="consoleCard">
+<div class="console-card">
     <h3>Serial Data Output</h3>
-    <div id="serialConsole">Waiting for data...</div>
+    <div id="serialConsole">Waiting for live stream...</div>
 </div>
 
 <script>
     const databaseURL = "https://test-5b6ed-default-rtdb.firebaseio.com/";
-    const validUsername = "sachinthaka";
-    const validPassword = "sachinthaka";
-
-    function login() {
-        const u = document.getElementById('username').value;
-        const p = document.getElementById('password').value;
-        if (u === validUsername && p === validPassword) {
-            document.getElementById('loginCard').classList.add('hidden');
-            document.getElementById('controlCard').classList.remove('hidden');
-            document.getElementById('consoleCard').classList.remove('hidden');
-            fetchSerialData();
-            setInterval(fetchSerialData, 1000); // Poll data every 1 sec
-        } else {
-            document.getElementById('loginError').style.display = "block";
-        }
-    }
+    let lastMsg = "";
 
     function sendData(status) {
         fetch(`${databaseURL}/LED_STATUS.json`, {
@@ -121,14 +85,28 @@
         fetch(`${databaseURL}/SERIAL_OUTPUT.json`)
         .then(res => res.json())
         .then(data => {
-            if (data) {
+            if (data && data !== lastMsg) {
+                lastMsg = data;
                 const consoleBox = document.getElementById('serialConsole');
-                consoleBox.innerText = data;
+                
+                // Clear placeholder text if it's the first log
+                if (consoleBox.innerText === "Waiting for live stream...") {
+                    consoleBox.innerText = "";
+                }
+
+                // Add timestamp and append new log line
+                const time = new Date().toLocaleTimeString();
+                consoleBox.innerText += `[${time}] ${data}\n`;
+                
+                // Auto scroll to bottom
                 consoleBox.scrollTop = consoleBox.scrollHeight;
             }
         })
         .catch(err => console.error(err));
     }
+
+    // Fetch data every 500ms
+    setInterval(fetchSerialData, 500);
 </script>
 
 </body>
