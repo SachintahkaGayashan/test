@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Motor Control Panel & Live Console</title>
+    <title>Motor & Ultrasonic Dashboard</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -17,30 +17,39 @@
             margin: 0;
             padding: 20px;
         }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            max-width: 800px;
+            width: 100%;
+        }
         .card {
             background-color: #16213e;
             padding: 25px;
             border-radius: 15px;
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
             text-align: center;
-            width: 360px;
-            margin-bottom: 20px;
+            flex: 1 1 340px;
         }
         h2, h3 { margin-bottom: 15px; }
         .btn { 
             padding: 12px; 
-            font-size: 16px; 
+            font-size: 15px; 
             font-weight: bold; 
             border: none; 
             border-radius: 8px; 
             cursor: pointer; 
-            margin: 8px 0; 
+            margin: 6px 0; 
             transition: 0.3s; 
             width: 100%; 
         }
         .btn-on { background-color: #00b894; color: white; }
         .btn-rev { background-color: #0984e3; color: white; }
         .btn-off { background-color: #d63031; color: white; }
+        .btn-sensor-on { background-color: #6c5ce7; color: white; }
+        .btn-sensor-off { background-color: #e17055; color: white; }
         
         /* Terminal Console Box */
         .console-card {
@@ -48,16 +57,15 @@
             border: 1px solid #1e293b;
             padding: 20px;
             border-radius: 12px;
-            width: 360px;
+            flex: 1 1 340px;
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
         }
-        #serialConsole {
+        .console-box {
             background-color: #020617;
-            color: #38bdf8;
             font-family: 'Courier New', Courier, monospace;
             padding: 12px;
             border-radius: 8px;
-            height: 220px;
+            height: 180px;
             overflow-y: auto;
             text-align: left;
             font-size: 13px;
@@ -65,27 +73,50 @@
             white-space: pre-wrap;
             line-height: 1.4;
         }
+        #motorConsole { color: #38bdf8; }
+        #ultrasonicConsole { color: #a855f7; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2>Motor Control Panel</h2>
-    <button class="btn btn-on" onclick="sendData('ON')">MOTOR FORWARD (ON)</button>
-    <button class="btn btn-rev" onclick="sendData('REV')">MOTOR REVERSE</button>
-    <button class="btn btn-off" onclick="sendData('OFF')">STOP MOTOR</button>
-</div>
+<h2 style="margin-bottom: 25px;">Smart Robot Control Dashboard</h2>
 
-<div class="console-card">
-    <h3>Serial Data Output</h3>
-    <div id="serialConsole">Waiting for live stream...</div>
+<div class="container">
+    <!-- Motor Control Card -->
+    <div class="card">
+        <h3>Motor Control Panel</h3>
+        <button class="btn btn-on" onclick="sendMotorData('ON')">MOTOR FORWARD (ON)</button>
+        <button class="btn btn-rev" onclick="sendMotorData('REV')">MOTOR REVERSE</button>
+        <button class="btn btn-off" onclick="sendMotorData('OFF')">STOP MOTOR</button>
+    </div>
+
+    <!-- Ultrasonic Control Card -->
+    <div class="card">
+        <h3>Ultrasonic Safety System</h3>
+        <button class="btn btn-sensor-on" onclick="sendSensorData('ENABLE')">ENABLE SENSOR (ON)</button>
+        <button class="btn btn-sensor-off" onclick="sendSensorData('DISABLE')">DISABLE SENSOR (OFF)</button>
+    </div>
+
+    <!-- Motor Console Card -->
+    <div class="console-card">
+        <h3>Motor Serial Output</h3>
+        <div id="motorConsole" class="console-box">Waiting for motor status...</div>
+    </div>
+
+    <!-- Ultrasonic Console Card -->
+    <div class="console-card">
+        <h3>Ultrasonic Serial Output</h3>
+        <div id="ultrasonicConsole" class="console-box">Waiting for distance data...</div>
+    </div>
 </div>
 
 <script>
     const databaseURL = "https://test-5b6ed-default-rtdb.firebaseio.com/";
-    let lastMsg = "";
+    let lastMotorMsg = "";
+    let lastUltrasonicMsg = "";
 
-    function sendData(status) {
+    // Send Motor State
+    function sendMotorData(status) {
         fetch(`${databaseURL}/LED_STATUS.json`, {
             method: 'PUT',
             body: JSON.stringify(status),
@@ -93,29 +124,55 @@
         });
     }
 
+    // Send Ultrasonic State (ENABLE / DISABLE)
+    function sendSensorData(status) {
+        fetch(`${databaseURL}/ULTRASONIC_STATUS.json`, {
+            method: 'PUT',
+            body: JSON.stringify(status),
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+
+    // Fetch Output Data
     function fetchSerialData() {
+        // 1. Fetch Motor Status Output
         fetch(`${databaseURL}/SERIAL_OUTPUT.json`)
         .then(res => res.json())
         .then(data => {
-            if (data && data !== lastMsg) {
-                lastMsg = data;
-                const consoleBox = document.getElementById('serialConsole');
-                
-                if (consoleBox.innerText === "Waiting for live stream...") {
-                    consoleBox.innerText = "";
-                }
-
-                const time = new Date().toLocaleTimeString();
-                consoleBox.innerText += `[${time}] ${data}\n`;
-                
-                // Auto scroll to bottom
-                consoleBox.scrollTop = consoleBox.scrollHeight;
+            if (data && data !== lastMotorMsg) {
+                lastMotorMsg = data;
+                appendConsole('motorConsole', data);
             }
-        })
-        .catch(err => console.error(err));
+        });
+
+        // 2. Fetch Ultrasonic Sensor Output
+        fetch(`${databaseURL}/ULTRASONIC_OUTPUT.json`)
+        .then(res => res.json())
+        .then(data => {
+            if (data && data !== lastUltrasonicMsg) {
+                lastUltrasonicMsg = data;
+                appendConsole('ultrasonicConsole', data);
+            }
+        });
     }
 
-    // Poll data every 500 milliseconds
+    function appendConsole(elementId, text) {
+        const consoleBox = document.getElementById(elementId);
+        if (consoleBox.innerText.includes("Waiting for")) {
+            consoleBox.innerText = "";
+        }
+        const time = new Date().toLocaleTimeString();
+        consoleBox.innerText += `[${time}] ${text}\n`;
+        consoleBox.scrollTop = consoleBox.scrollHeight;
+        
+        // Keep console log manageable (max 50 lines)
+        const lines = consoleBox.innerText.split('\n');
+        if (lines.length > 50) {
+            consoleBox.innerText = lines.slice(lines.length - 50).join('\n');
+        }
+    }
+
+    // Poll Firebase every 500ms
     setInterval(fetchSerialData, 500);
 </script>
 
