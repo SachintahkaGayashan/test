@@ -74,39 +74,32 @@
 
     // Generate 8 sensor boxes
     const grid = document.getElementById('sensorGrid');
-    for (let i = 1; i <= 8; i++) {
+    for (let i = 0; i < 8; i++) {
         grid.innerHTML += `
             <div class="sensor-box">
-                <div class="sensor-label">S${i}</div>
+                <div class="sensor-label">S${i+1}</div>
                 <div class="sensor-value" id="val${i}">---</div>
             </div>
         `;
     }
 
     function fetchQTRData() {
-        // Fetching from /QTR_SENSORS.json
-        fetch(`${databaseURL}/QTR_SENSORS.json`)
+        // Updated to match exact Firebase path: /QTR_Sensors/s.json
+        fetch(`${databaseURL}/QTR_Sensors/s.json`)
         .then(res => res.json())
         .then(data => {
             if (data) {
                 document.getElementById('statusText').innerText = "Status: Receiving Live Data";
                 
-                // Data can be a string like "935,837,..." or parsed array depending on Firebase storage format
-                let values = [];
-                if (typeof data === 'string') {
-                    values = data.split(',');
-                } else if (Array.isArray(data)) {
-                    values = data;
-                }
-                
-                for (let i = 0; i < values.length && i < 8; i++) {
-                    const valElement = document.getElementById(`val${i+1}`);
-                    if (valElement) {
-                        valElement.innerText = values[i];
+                // data is an array/object containing values from index 0 to 7
+                for (let i = 0; i < 8; i++) {
+                    const valElement = document.getElementById(`val${i}`);
+                    if (valElement && data[i] !== undefined) {
+                        valElement.innerText = data[i];
                     }
                 }
             } else {
-                document.getElementById('statusText').innerText = "Status: No Data Found in Firebase";
+                document.getElementById('statusText').innerText = "Status: No Data Found";
             }
         })
         .catch(err => {
