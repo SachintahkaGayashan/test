@@ -23,7 +23,7 @@
             border-radius: 15px;
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
             text-align: center;
-            width: 450px;
+            width: 550px;
             max-width: 100%;
         }
         h2 { margin-bottom: 20px; color: #00b894; }
@@ -84,18 +84,20 @@
     }
 
     function fetchQTRData() {
-        // Updated to match exact Firebase path: /QTR_Sensors/s.json
         fetch(`${databaseURL}/QTR_Sensors/s.json`)
         .then(res => res.json())
         .then(data => {
             if (data) {
                 document.getElementById('statusText').innerText = "Status: Receiving Live Data";
                 
-                // data is an array/object containing values from index 0 to 7
-                for (let i = 0; i < 8; i++) {
-                    const valElement = document.getElementById(`val${i}`);
-                    if (valElement && data[i] !== undefined) {
-                        valElement.innerText = data[i];
+                // Split the comma-separated string into an array of full values
+                if (typeof data === 'string') {
+                    const values = data.split(',');
+                    for (let i = 0; i < values.length && i < 8; i++) {
+                        const valElement = document.getElementById(`val${i}`);
+                        if (valElement) {
+                            valElement.innerText = values[i];
+                        }
                     }
                 }
             } else {
