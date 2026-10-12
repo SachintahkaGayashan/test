@@ -63,7 +63,7 @@
     <h2>QTR-8A Sensor Array Live View</h2>
     
     <div class="grid-container" id="sensorGrid">
-        <!-- Dynamically filled sensor boxes for sensors 1 to 8 -->
+        <!-- Dynamically filled sensor boxes -->
     </div>
 
     <div class="status-bar" id="statusText">Connecting to Firebase...</div>
@@ -72,7 +72,7 @@
 <script>
     const databaseURL = "https://test-5b6ed-default-rtdb.firebaseio.com/";
 
-    // Generate 8 sensor boxes initially
+    // Generate 8 sensor boxes
     const grid = document.getElementById('sensorGrid');
     for (let i = 1; i <= 8; i++) {
         grid.innerHTML += `
@@ -84,21 +84,29 @@
     }
 
     function fetchQTRData() {
+        // Fetching from /QTR_SENSORS.json
         fetch(`${databaseURL}/QTR_SENSORS.json`)
         .then(res => res.json())
         .then(data => {
             if (data) {
                 document.getElementById('statusText').innerText = "Status: Receiving Live Data";
-                const values = data.split(',');
                 
-                for (let i = 0; i < values.length; i++) {
+                // Data can be a string like "935,837,..." or parsed array depending on Firebase storage format
+                let values = [];
+                if (typeof data === 'string') {
+                    values = data.split(',');
+                } else if (Array.isArray(data)) {
+                    values = data;
+                }
+                
+                for (let i = 0; i < values.length && i < 8; i++) {
                     const valElement = document.getElementById(`val${i+1}`);
                     if (valElement) {
                         valElement.innerText = values[i];
                     }
                 }
             } else {
-                document.getElementById('statusText').innerText = "Status: No Data Found";
+                document.getElementById('statusText').innerText = "Status: No Data Found in Firebase";
             }
         })
         .catch(err => {
@@ -107,7 +115,7 @@
         });
     }
 
-    // Poll Firebase every 300ms for smooth live updates
+    // Poll Firebase every 300ms
     setInterval(fetchQTRData, 300);
 </script>
 
